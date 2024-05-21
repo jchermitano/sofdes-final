@@ -1,8 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import Chart from 'chart.js/auto';
+import { initializeApp } from "firebase/app";
+import { getDatabase, ref, push, set } from "firebase/database";
+import { Chart } from 'chart.js';
 import './App.css';
 
-const App = () => {
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyAtFCWn1x7ETLP9ebbOWGhp9g1vqWC-njc",
+  authDomain: "sofdes-watermelon.firebaseapp.com",
+  databaseURL: "https://sofdes-watermelon-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "sofdes-watermelon",
+  storageBucket: "sofdes-watermelon.appspot.com",
+  messagingSenderId: "453456835907",
+  appId: "1:453456835907:web:1c546f6f1eedf37211abf6",
+  measurementId: "G-SDE2V56Z4X"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+export default function App() {
   const [variety, setVariety] = useState('');
   const [ripeness, setRipeness] = useState('');
   const [watermelonData, setWatermelonData] = useState([]);
@@ -22,75 +40,98 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    try {
-      const varietyData = {
-        labels: ['Crimson', 'Sugar Baby'],
-        datasets: [{
-          label: 'Watermelon Variety',
-          data: [4, 4],
-          backgroundColor: [
-            'rgba(255, 99, 132, 2)',
-            'rgba(54, 162, 235, 2)'
-          ],
-          borderColor: [
-            'rgba(255, 99, 132, 1)',
-            'rgba(54, 162, 235, 1)'
-          ],
-          borderWidth: 1
-        }]
-      };
-  
-      const ripenessData = {
-        labels: ['Unripe', 'Ripe', 'Overripe'],
-        datasets: [{
-          label: 'Watermelon Ripeness',
-          data: [3, 3, 2],
-          backgroundColor: [
-            'rgba(255, 99, 132, 1)',
-            'rgba(54, 162, 235, 1)',
-            'rgba(255, 206, 86, 1)'
-          ],
-          borderColor: [
-            'rgba(255, 99, 132, 1)',
-            'rgba(54, 162, 235, 1)',
-            'rgba(255, 206, 86, 1)'
-          ],
-          borderWidth: 1
-        }]
-      };
-  
-      const varietyCtx = document.getElementById('varietyChart').getContext('2d');
-      const ripenessCtx = document.getElementById('ripenessChart').getContext('2d');
-  
-      new Chart(varietyCtx, {
-        type: 'pie',
-        data: varietyData,
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              position: 'top',
-            }
+    const varietyData = {
+      labels: ['Crimson', 'Sugar Baby'],
+      datasets: [{
+        label: 'Watermelon Variety',
+        data: [4, 4],
+        backgroundColor: [
+          'rgba(255, 99, 132, 2)',
+          'rgba(54, 162, 235, 2)'
+        ],
+        borderColor: [
+          'rgba(255, 99, 132, 1)',
+          'rgba(54, 162, 235, 1)'
+        ],
+        borderWidth: 1
+      }]
+    };
+
+    const ripenessData = {
+      labels: ['Unripe', 'Ripe', 'Overripe'],
+      datasets: [{
+        label: 'Watermelon Ripeness',
+        data: [3, 3, 2],
+        backgroundColor: [
+          'rgba(255, 99, 132, 1)',
+          'rgba(54, 162, 235, 1)',
+          'rgba(255, 206, 86, 1)'
+        ],
+        borderColor: [
+          'rgba(255, 99, 132, 1)',
+          'rgba(54, 162, 235, 1)',
+          'rgba(255, 206, 86, 1)'
+        ],
+        borderWidth: 1
+      }]
+    };
+
+    const varietyCtx = document.getElementById('varietyChart').getContext('2d');
+    const ripenessCtx = document.getElementById('ripenessChart').getContext('2d');
+
+    new Chart(varietyCtx, {
+      type: 'pie',
+      data: varietyData,
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'top',
           }
         }
-      });
-  
-      new Chart(ripenessCtx, {
-        type: 'pie',
-        data: ripenessData,
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              position: 'top',
-            }
+      }
+    });
+
+    new Chart(ripenessCtx, {
+      type: 'pie',
+      data: ripenessData,
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'top',
           }
         }
-      });
-    } catch (error) {
-      console.error("Error initializing charts:", error);
+      }
+    });
+  }, []);
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    if (variety === '' || ripeness === '') {
+      alert('Please select both variety and ripeness');
+      return;
     }
-  }, []);  
+
+    const currentDate = new Date().toLocaleString();
+    const newEntry = {
+      variety,
+      ripeness,
+      timestamp: currentDate
+    };
+
+    setWatermelonData([...watermelonData, newEntry]);
+
+    // Firebase database code
+    const dataRef = ref(db, 'watermelons');
+    const newDataRef = push(dataRef);
+
+    set(newDataRef, newEntry)
+      .catch(error => {
+        console.error("Error writing new data to Firebase Database", error);
+      });
+  };
 
   return (
     <div className="App">
@@ -145,4 +186,3 @@ const App = () => {
   );
 }
 
-export default App;

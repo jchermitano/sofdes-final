@@ -182,40 +182,60 @@
 
   <script>
     // Initialize Parse
-    Parse.initialize("bfeFgJcvr9SewZFLeytBS6U56W3kOrLc3Cd4VBOm", "FlTnWSq7RHsCmqQru8wQ1voLirZzkalDQtSprccu");
+    Parse.initialize("YOUR_APP_ID", "YOUR_JS_KEY");
     Parse.serverURL = 'https://parseapi.back4app.com/';
-   
+
     // Event listener for form submission
     document.getElementById('watermelon-form').addEventListener('submit', handleFormSubmission);
 
     async function handleFormSubmission(event) {
       event.preventDefault();
-      
-      const variety = document.getElementById('variety').value;
-      const ripeness = document.getElementById('ripeness').value;
-    
-      if (!variety || !ripeness) {
-        alert('Please select both variety and ripeness');
-        return;
-      }
 
+      // Get values from the form
+      // ... 
+
+      // Save a new Watermelon object to Parse
+      // ...
+
+      // Fetch all watermelon entries from Parse and update the table and charts
+      fetchAllWatermelons();
+    }
+
+    async function fetchAllWatermelons() {
       const Watermelon = Parse.Object.extend('Watermelon');
-      const watermelon = new Watermelon();
-    
-      watermelon.set('variety', variety);
-      watermelon.set('ripeness', ripeness);
-      watermelon.set('timestamp', new Date().toISOString());
-    
+      const query = new Parse.Query(Watermelon);
+
       try {
-        const result = await watermelon.save();
-        console.log('Watermelon created', result);
-        fetchAndDisplayCharts();
+        const results = await query.find();
+        // Use the results to update the table and charts
+        updateTable(results);
+        updateCharts(results);
       } catch (error) {
-        console.error('Error while creating Watermelon: ', error);
+        console.error('Error while fetching Watermelons', error);
       }
     }
 
-    async function fetchAndDisplayCharts() {
+    function updateTable(results) {
+      const tableBody = document.getElementById('watermelon-table').querySelector('tbody');
+      // Clear the table body
+      tableBody.innerHTML = '';
+
+      // Fill the table with new data
+      results.forEach((object, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${object.get('variety')}</td>
+          <td>${object.get('ripeness')}</td>
+          <td>${object.get('timestamp') ? object.get('timestamp') : ''}</td>
+        `;
+        // Append the row to the table
+        tableBody.appendChild(tr);
+      });
+    }
+
+    function updateCharts(results) {
+      async function fetchAndDisplayCharts() {
       const Watermelon = Parse.Object.extend('Watermelon');
       const query = new Parse.Query(Watermelon);
 
@@ -243,7 +263,8 @@
         console.error('Error while fetching data: ', error);
       }
     }
-    
+    }
+
     function createVarietyChart(data) {
       const varietyCtx = document.getElementById('varietyChart').getContext('2d');
       new Chart(varietyCtx, {
@@ -293,9 +314,8 @@
         }
       });
     }
-
-    // Call fetchAndDisplayCharts to load and display the charts when the page is loaded
-    fetchAndDisplayCharts();
+    
+    fetchAllWatermelons();
   </script>
 </body>
 </html>
